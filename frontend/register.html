@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Educational Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="auth-container">
+
+        <div class="auth-box">
+
+            <h1>SKILL<span>NEST</span></h1>
+            <h2>Create Account</h2>
+            <p>Join Educational Hub and start learning.</p>
+
+            <form id="registerForm">
+
+                <label>Full Name</label>
+                <input type="text" id="fullName"
+                    placeholder="Enter your full name" required>
+
+                <label>Email Address</label>
+                <input type="email" id="registerEmail"
+                    placeholder="Enter your email" required>
+
+                <label>USN / Student ID</label>
+                <input type="text" id="studentId"
+                    placeholder="Enter your USN" required>
+
+                <label>Password</label>
+                <input type="password" id="registerPassword"
+                    placeholder="Create password" minlength="6" required>
+
+                <label>Confirm Password</label>
+                <input type="password" id="confirmPassword"
+                    placeholder="Confirm password" required>
+
+                <button type="submit" class="auth-btn">
+                    Register
+                </button>
+
+            </form>
+
+            <p class="auth-link">
+                Already have an account?
+                <a href="login.html">Login</a>
+            </p>
+
+            <a href="index.html" class="back-home">← Back to Home</a>
+
+        </div>
+
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
