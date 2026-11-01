@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id            String              @id @default(cuid())
+  name          String
+  email         String              @unique
+  passwordHash  String
+  role          Role                @default(STUDENT)
+  isActive      Boolean             @default(true)
+  tokenVersion Int      @default(0)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  passwordReset PasswordResetToken?
+  savedNotes    SavedNote[]
+  savedPyqs     SavedPyq[]
+  enrollments   Enrollment[]
+  videoProgress VideoProgress[]
+
+  @@index([role])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  userId    String   @unique
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subject {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chapters Chapter[]
+  notes    Note[]
+  pyqs     Pyq[]
+  courses  Course[]
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String
+  subjectId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  notes   Note[]
+  pyqs    Pyq[]
+  videos  Video[]
+
+  @@unique([subjectId, slug])
+  @@index([subjectId])
+}
+
+model Note {
+  id          String        @id @default(cuid())
+  title       String
+  description String?       @db.Text
+  fileUrl     String
+  fileName    String
+  status      ContentStatus @default(DRAFT)
+  subjectId   String
+  chapterId   String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  subject Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  chapter Chapter     @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  savedBy SavedNote[]
+
+  @@index([subjectId, chapterId, status])
+}
+
+model SavedNote {
+  userId    String
+  noteId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@id([userId, noteId])
+}
+
+model Pyq {
+  id        String        @id @default(cuid())
+  question  String        @db.Text
+  answer    String?       @db.Text
+  year      Int
+  exam      String
+  status    ContentStatus @default(DRAFT)
+  subjectId String
+  chapterId String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  subject Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  chapter Chapter    @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  savedBy SavedPyq[]
+
+  @@index([subjectId, chapterId, exam, year, status])
+}
+
+model SavedPyq {
+  userId    String
+  pyqId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pyq  Pyq  @relation(fields: [pyqId], references: [id], onDelete: Cascade)
+
+  @@id([userId, pyqId])
+}
+
+model Course {
+  id           String        @id @default(cuid())
+  title        String
+  description  String?       @db.Text
+  thumbnailUrl String?
+  status       ContentStatus @default(DRAFT)
+  subjectId    String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  subject     Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  videos      Video[]
+  enrollments Enrollment[]
+
+  @@index([subjectId, status])
+}
+
+model Video {
+  id           String        @id @default(cuid())
+  title        String
+  description  String?       @db.Text
+  streamingUrl String
+  durationSec  Int?
+  position     Int           @default(0)
+  status       ContentStatus @default(DRAFT)
+  courseId     String
+  chapterId    String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  course   Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  chapter  Chapter         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  progress VideoProgress[]
+
+  @@unique([courseId, position])
+  @@index([chapterId, status])
+}
+
+model Enrollment {
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([userId, courseId])
+}
+
+model VideoProgress {
+  userId        String
+  videoId       String
+  watchedSec    Int      @default(0)
+  completed     Boolean  @default(false)
+  lastWatchedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+}
